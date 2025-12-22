@@ -1,0 +1,4 @@
+package ocr
+
+func OCRHandler() {
+}
