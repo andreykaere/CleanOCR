@@ -38,9 +38,23 @@ $(document).ready(function() {
 
   function handleFiles(files) {
     if (!files || files.length === 0) return;
+    
+    const formData = new FormData();
+    
     for (let i = 0; i < files.length; i++) {
-      alert(`File uploaded: ${files[i].name}`);
+        console.log(`${files[i]}`);
+        formData.append(`file${i}`, files[i]);
     }
+
+    fetch('https://rozetka.hopto.org/process', {
+    // fetch('http://127.0.0.1:20080/process', {
+      method: 'POST',
+      credentials: "include",
+      body: formData,
+    })
+    .then(response => response.text())
+    .then(result => console.log(result))
+    .catch(error => console.error('Error:', error));
   }
 });
 
