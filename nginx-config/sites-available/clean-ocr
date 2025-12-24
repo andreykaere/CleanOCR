@@ -1,0 +1,41 @@
+server {
+	    server_name rozetka.hopto.org;
+	    client_max_body_size 100M;
+
+	        root /var/clean-ocr/CleanOCR/frontend;
+		    index index.html;
+
+		        # FRONTEND (SPA-friendly)
+		        location / {
+				        try_files $uri $uri/ /index.html;
+					    }
+
+			    # BACKEND API (NO CORS)
+			    location /api/ {
+				            proxy_pass https://rozetka.hopto.org:5000/;
+										        }
+
+			        listen 443 ssl; # managed by Certbot
+					    ssl_certificate /etc/letsencrypt/live/rozetka.hopto.org/fullchain.pem;
+				    ssl_certificate_key /etc/letsencrypt/live/rozetka.hopto.org/privkey.pem;
+				        include /etc/letsencrypt/options-ssl-nginx.conf;
+					    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+
+
+
+
+server {
+    if ($host = rozetka.hopto.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+	    listen 80;
+
+		        server_name rozetka.hopto.org;
+    return 404; # managed by Certbot
+
+
+}
