@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
 	"github.com/google/uuid"
 )
 
@@ -17,16 +16,6 @@ const SessionKey contextKey = "session_id"
 
 func main() {
 	r := chi.NewRouter()
-	r.Use(cors.Handler(cors.Options{
-		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"http://0.0.0.0:8000"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Set-Cookie"},
-		ExposedHeaders:   []string{"Link", "Set-Cookie"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	}))
 
 	r.With(AuthMiddleware).Post("/process", processFile)
 
@@ -35,8 +24,10 @@ func main() {
 	// 	r.Get("/{id}", getJob)
 	// 	r.Delete("/{id}", cancelJob)
 	// })
+	certFile := "/etc/letsencrypt/live/rozetka.hopto.org/fullchain.pem"
+	keyFile := "/etc/letsencrypt/live/rozetka.hopto.org/privkey.pem"
 
-	http.ListenAndServe(":20080", r)
+	http.ListenAndServeTLS(":5000", certFile, keyFile, r)
 }
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -57,9 +48,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				Value:    sessionID,
 				Path:     "/",
 				HttpOnly: true,
-				// Secure:   true,
-				// SameSite: http.SameSiteLaxMode,
-				SameSite: http.SameSiteNoneMode,
+				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
+				//SameSite: http.SameSiteNoneMode,
 			}
 			http.SetCookie(w, cookie)
 		} else {

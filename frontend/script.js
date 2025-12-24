@@ -46,8 +46,8 @@ $(document).ready(function() {
         formData.append(`file${i}`, files[i]);
     }
 
-    fetch('https://rozetka.hopto.org/process', {
-    // fetch('http://127.0.0.1:20080/process', {
+    //fetch('https://rozetka.hopto.org:20080/process', {
+    fetch('/api/process', {
       method: 'POST',
       credentials: "include",
       body: formData,
