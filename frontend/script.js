@@ -42,11 +42,9 @@ $(document).ready(function() {
     const formData = new FormData();
     
     for (let i = 0; i < files.length; i++) {
-        console.log(`${files[i]}`);
-        formData.append(`file${i}`, files[i]);
+        formData.append(`files`, files[i]);
     }
 
-    //fetch('https://rozetka.hopto.org:20080/process', {
     fetch('/api/process', {
       method: 'POST',
       credentials: "include",

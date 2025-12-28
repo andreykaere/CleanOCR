@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
-	"time"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -72,6 +74,13 @@ func processFile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user not found in context", http.StatusUnauthorized)
 		return
 	}
+
+	files := r.MultipartForm.File["files"]
+
+	for _, file := range files {
+		saveFile(sessionID, file)
+	}
+
 	// cookie, err := r.Cookie("session_id")
 
 	// if err != nil {
@@ -79,11 +88,33 @@ func processFile(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	// sessionID := cookie.Value
-	time.Sleep(1 * time.Second)
-	fmt.Println("bar")
+	// time.Sleep(1 * time.Second)
+	// fmt.Println("bar")
 
-	w.Write([]byte(fmt.Sprintf("Hello from server, your cookie is %s", sessionID)))
+	// w.Write([]byte(fmt.Sprintf("Hello from server, your cookie is %s", sessionID)))
 	// http.ServeFile(w, r, )
+}
+
+func saveFile(session_id string, fh *multipart.FileHeader) error {
+	file, err := fh.Open()
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	if err = os.MkdirAll("./files", 0755); err != nil {
+		return err
+	}
+
+	dst, err := os.Create("./files/" + fh.Filename)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, file)
+
+	return err
 }
 
 // func saveFile(session_id string, file File) {
