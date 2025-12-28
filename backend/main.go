@@ -74,39 +74,30 @@ func processFile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "user not found in context", http.StatusUnauthorized)
 		return
 	}
+	w.Write([]byte(fmt.Sprintf("Hello from server, your cookie is %s", sessionID)))
 
-	files := r.MultipartForm.File["files"]
-
-	for _, file := range files {
-		saveFile(sessionID, file)
+	file, fh, err := r.FormFile("file")
+	if err != nil {
+		// TODO: handle this
+		panic(err)
 	}
+	defer file.Close()
 
-	// cookie, err := r.Cookie("session_id")
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// sessionID := cookie.Value
-	// time.Sleep(1 * time.Second)
-	// fmt.Println("bar")
-
-	// w.Write([]byte(fmt.Sprintf("Hello from server, your cookie is %s", sessionID)))
-	// http.ServeFile(w, r, )
+	saveFile(sessionID, file, fh)
 }
 
-func saveFile(session_id string, fh *multipart.FileHeader) error {
+func saveFile(sessionID string, file multipart.File, fh *multipart.FileHeader) error {
 	file, err := fh.Open()
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	if err = os.MkdirAll("./files", 0755); err != nil {
+	if err = os.MkdirAll("/files", 0755); err != nil {
 		return err
 	}
 
-	dst, err := os.Create("./files/" + fh.Filename)
+	dst, err := os.Create("/files/" + fh.Filename)
 	if err != nil {
 		return err
 	}
@@ -117,13 +108,3 @@ func saveFile(session_id string, fh *multipart.FileHeader) error {
 	return err
 }
 
-// func saveFile(session_id string, file File) {
-// 	detectedFileType := http.DetectContentType(fileBytes)
-// 	switch detectedFileType {
-// 	case "application/pdf":
-// 		// TODO
-// 	default:
-// 		http.Error(w, "INVALID_FILE_TYPE", http.StatusBadRequest)
-// 		return
-// 	}
-// }
