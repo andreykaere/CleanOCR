@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ import (
 type contextKey string
 
 const SessionKey contextKey = "session_id"
+const UploadDir = "/root/files"
 
 func main() {
 	r := chi.NewRouter()
@@ -37,8 +39,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		var sessionID string
 		cookie, err := r.Cookie("session_id")
 
-		fmt.Println("quuz")
-
 		if err == nil {
 			sessionID = cookie.Value
 		} else if err == http.ErrNoCookie {
@@ -59,8 +59,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-
-		fmt.Println("foo")
 
 		ctx := context.WithValue(r.Context(), SessionKey, sessionID)
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -83,28 +81,23 @@ func processFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	saveFile(sessionID, file, fh)
+	filename := fh.Filename
+	saveFile(file, filename)
+	// handleFile(sessionID, file, filename)
 }
 
-func saveFile(sessionID string, file multipart.File, fh *multipart.FileHeader) error {
-	file, err := fh.Open()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	if err = os.MkdirAll("/files", 0755); err != nil {
+func saveFile(file multipart.File, filename string) error {
+	if err := os.MkdirAll(UploadDir, 0755); err != nil {
 		return err
 	}
 
-	dst, err := os.Create("/files/" + fh.Filename)
+	dst, err := os.Create(filepath.Join(UploadDir, filename))
 	if err != nil {
 		return err
 	}
 	defer dst.Close()
 
 	_, err = io.Copy(dst, file)
-
 	return err
 }
 
